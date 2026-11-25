@@ -4,9 +4,10 @@
 // under storm clouds, a Long March rocket lifting off) with all text rendered in PIL, so
 // no letter is ever AI-garbled. The program itself only copies that image to
 // /output/entry.png, deterministically, with no network and no randomness.
-// After copying it checks the output is byte-identical to the source (SHA-256) and a
-// valid PNG, so a truncated or corrupt copy fails loudly instead of shipping a broken
-// image. A size-only check could pass a same-length but corrupted copy; the hash cannot.
+// After copying it checks the output is byte-identical to the source (same size and
+// SHA-256) and a valid PNG, so a truncated or corrupt copy fails loudly instead of
+// shipping a broken image. A size-only check could pass a same-length but corrupted
+// copy; the hash cannot.
 //
 // Outside the grader's container, MAKEFUN_OUTPUT_DIR stands in for /output:
 //   mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts
@@ -24,6 +25,7 @@ copyFileSync(src, out);
 const srcBuf = readFileSync(src);
 const outBuf = readFileSync(out);
 const sha256 = (b: Buffer) => createHash('sha256').update(b).digest('hex');
+if (outBuf.length !== srcBuf.length) throw new Error(`entry.png copy is incomplete: output is ${outBuf.length} bytes, source is ${srcBuf.length}`);
 if (sha256(outBuf) !== sha256(srcBuf)) throw new Error('entry.png copy is incomplete: SHA-256 mismatch with source');
 const pngSignature = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 if (!outBuf.subarray(0, 8).equals(pngSignature)) throw new Error('entry.png copy is not a valid PNG');
